@@ -1,18 +1,31 @@
 import socket
+import threading, time
 
 ip_address = '127.0.0.1'
 port_number = 1234
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((ip_address, port_number))
-server_socket.listen(2)
+THREADS = []
+CMD_INPUT = []
+CMD_OUTPUT = []
 
-client_socket, address = server_socket.accept()
+def close_connection(connection):
+    connection.close()
 
-msg = client_socket.recv(1024)
+def handle_connection(connection, address):
+    msg = connection.recv(1024).decode()
 
-print(msg)
+    while msg != 'quit':
+        print(msg)
+        connection.send(msg.encode())
+        msg = connection.recv(1024).decode()
+    close_connection(connection)
 
-client_socket.close()
-server_socket.close()
-
+ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ss.bind((ip_address, port_number))
+ss.listen(5)
+# def init_server():
+while True:
+    connection, address = ss.accept()
+    t = threading.Thread(target = handle_connection, args=(connection, address))
+    THREADS.append(t)
+    t.start()
